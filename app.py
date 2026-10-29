@@ -4,6 +4,8 @@ import os
 import re
 import shutil
 import socket
+import subprocess
+import sys
 import tempfile
 import zipfile
 from urllib.parse import urlparse, unquote, urljoin
@@ -45,6 +47,10 @@ IMAGE_TYPES = {
     "image/gif": ".gif",
 }
 
+IMAGE_EXTENSIONS = (
+    ".jpg", ".jpeg", ".png", ".webp", ".gif",
+)
+
 BASE_OPTIONS = {
     "quiet": True,
     "no_warnings": True,
@@ -68,6 +74,24 @@ def is_allowed_social_url(url):
         return any(
             host == domain or host.endswith("." + domain)
             for domain in ALLOWED_DOMAINS
+        )
+    except Exception:
+        return False
+
+
+def is_tiktok_photo_url(url):
+    """Identify TikTok photo-post links."""
+    try:
+        parsed = urlparse(url)
+        host = (parsed.hostname or "").lower()
+
+        return (
+            parsed.scheme in ("http", "https")
+            and (
+                host == "tiktok.com"
+                or host.endswith(".tiktok.com")
+            )
+            and "/photo/" in parsed.path.lower()
         )
     except Exception:
         return False
@@ -122,9 +146,7 @@ def looks_like_image_url(url):
     """Check common image extensions without trusting the URL alone."""
     try:
         path = urlparse(str(url)).path.lower()
-        return path.endswith(
-            (".jpg", ".jpeg", ".png", ".webp", ".gif")
-        )
+        return path.endswith(IMAGE_EXTENSIONS)
     except Exception:
         return False
 
@@ -149,6 +171,15 @@ def info():
         return jsonify(
             error="Please enter a supported public video link."
         ), 400
+
+    # A photo carousel is not a normal video-info request.
+    if is_tiktok_photo_url(url):
+        return jsonify(
+            error=(
+                "This is a TikTok photo post. Use the image-download "
+                "feature to download its photos."
+            )
+        ), 422
 
     try:
         with yt_dlp.YoutubeDL(BASE_OPTIONS) as downloader:
@@ -326,13 +357,15 @@ def download_direct_image(url, temp_dir):
 
             if length:
                 try:
-                    if int(length) > IMAGE_MAX_BYTES:
-                        raise ValueError(
-                            "Image exceeds the size limit."
-                        )
-                except ValueError as error:
-                    if str(error) == "Image exceeds the size limit.":
-                        raise
+                    content_length = int(length)
+                except (ValueError, TypeError):
+                    content_length = None
+
+                if (
+                    content_length is not None
+                    and content_length > IMAGE_MAX_BYTES
+                ):
+                    raise ValueError("Image exceeds the size limit.")
 
             extension = IMAGE_TYPES[content_type]
             path = urlparse(current_url).path
@@ -383,12 +416,7 @@ def add_candidate(candidates, url):
 
 
 def collect_image_candidates(media, candidates=None, depth=0):
-    """
-    Collect thumbnails and direct image URLs from extractor metadata.
-
-    If yt-dlp exposes carousel slides as entries, this tries to collect
-    an image for each entry. Extractor metadata differs between posts.
-    """
+    """Collect thumbnails and direct image URLs from extractor metadata."""
     if candidates is None:
         candidates = []
 
@@ -404,17 +432,14 @@ def collect_image_candidates(media, candidates=None, depth=0):
                     entry, candidates, depth + 1
                 )
 
-        # Prefer slide entries over the overall post thumbnail.
         if candidates:
             return candidates
 
-    # Prefer a direct image URL when the extractor provides one.
     media_url = media.get("url")
 
     if isinstance(media_url, str) and looks_like_image_url(media_url):
         add_candidate(candidates, media_url)
 
-    # Some extractors expose the actual image under a format URL.
     for item in media.get("formats") or []:
         if not isinstance(item, dict):
             continue
@@ -424,8 +449,6 @@ def collect_image_candidates(media, candidates=None, depth=0):
         if isinstance(format_url, str) and looks_like_image_url(format_url):
             add_candidate(candidates, format_url)
 
-    # Use the best single thumbnail per item rather than every size
-    # of the same thumbnail.
     thumbnail = media.get("thumbnail")
 
     if thumbnail:
@@ -449,6 +472,63 @@ def collect_image_candidates(media, candidates=None, depth=0):
                 )
 
     return candidates
+
+
+def download_tiktok_photos(url, temp_dir):
+    """Use gallery-dl to download photos from a TikTok photo post."""
+    command = [
+        sys.executable,
+        "-m",
+        "gallery_dl",
+        "-D",
+        temp_dir,
+        url,
+    ]
+
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=180,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as error:
+        raise ValueError(
+            "TikTok photo download timed out. Please try again."
+        ) from error
+    except Exception as error:
+        app.logger.exception("Could not start gallery-dl")
+        raise ValueError(
+            "Could not start the TikTok photo downloader."
+        ) from error
+
+    downloaded = []
+
+    for root, _, filenames in os.walk(temp_dir):
+        for filename in filenames:
+            if filename.lower().endswith(IMAGE_EXTENSIONS):
+                downloaded.append(os.path.join(root, filename))
+
+    downloaded.sort()
+
+    if result.returncode != 0 or not downloaded:
+        detail = (result.stderr or result.stdout or "").strip()
+
+        app.logger.warning(
+            "gallery-dl failed (exit %s): %s",
+            result.returncode,
+            detail[-2000:],
+        )
+
+        if not downloaded:
+            raise ValueError(
+                "TikTok photos could not be extracted. Check the "
+                "Render logs for the gallery-dl error. The post may "
+                "be private, unavailable, or blocked by TikTok."
+            )
+
+    return downloaded
 
 
 def send_temp_file(path, temp_dir, download_name, mimetype=None):
@@ -499,7 +579,35 @@ def download_image():
     temp_dir = tempfile.mkdtemp(prefix="foger_social_images_")
 
     try:
-        # Allow yt-dlp to expose playlist/carousel entries if supported.
+        # TikTok photo carousel: use gallery-dl, not yt-dlp.
+        if is_tiktok_photo_url(url):
+            photos = download_tiktok_photos(url, temp_dir)
+
+            zip_path = os.path.join(
+                temp_dir, "foger-tiktok-photos.zip"
+            )
+
+            with zipfile.ZipFile(
+                zip_path, "w", compression=zipfile.ZIP_DEFLATED
+            ) as archive:
+                for index, photo_path in enumerate(photos, start=1):
+                    extension = (
+                        os.path.splitext(photo_path)[1].lower()
+                    )
+
+                    archive.write(
+                        photo_path,
+                        arcname=f"foger-photo-{index:02d}{extension}",
+                    )
+
+            return send_temp_file(
+                zip_path,
+                temp_dir,
+                "foger-tiktok-photos.zip",
+                mimetype="application/zip",
+            )
+
+        # Keep the existing yt-dlp image-extraction path for other links.
         options = dict(BASE_OPTIONS)
         options["noplaylist"] = False
 
@@ -513,8 +621,8 @@ def download_image():
 
         if not candidates:
             raise ValueError(
-                "No public image was found. This TikTok post may not "
-                "expose its photos to yt-dlp."
+                "No public image was found. This post may not expose "
+                "its photos to yt-dlp."
             )
 
         downloaded = []
@@ -524,7 +632,6 @@ def download_image():
             try:
                 image_path = download_direct_image(image_url, temp_dir)
 
-                # Avoid filename collisions if slides use the same name.
                 extension = os.path.splitext(image_path)[1] or ".jpg"
                 numbered_path = os.path.join(
                     temp_dir, f"foger-photo-{index:02d}{extension}"
@@ -541,17 +648,21 @@ def download_image():
                 failures.append(str(error))
                 app.logger.warning(
                     "Could not fetch image candidate %s: %s",
-                    index, error
+                    index,
+                    error,
                 )
 
         if not downloaded:
-            detail = failures[0] if failures else "No image could be fetched."
+            detail = (
+                failures[0]
+                if failures
+                else "No image could be fetched."
+            )
             raise ValueError(
-                "TikTok did not provide a downloadable public image. "
+                "The post did not provide a downloadable public image. "
                 + detail
             )
 
-        # A single image can be returned directly.
         if len(downloaded) == 1:
             image_path = downloaded[0]
             return send_temp_file(
@@ -560,21 +671,23 @@ def download_image():
                 os.path.basename(image_path),
             )
 
-        # Multiple images are returned as a ZIP archive.
-        zip_path = os.path.join(temp_dir, "foger-tiktok-photos.zip")
+        zip_path = os.path.join(
+            temp_dir, "foger-social-photos.zip"
+        )
 
         with zipfile.ZipFile(
             zip_path, "w", compression=zipfile.ZIP_DEFLATED
         ) as archive:
             for image_path in downloaded:
                 archive.write(
-                    image_path, arcname=os.path.basename(image_path)
+                    image_path,
+                    arcname=os.path.basename(image_path),
                 )
 
         return send_temp_file(
             zip_path,
             temp_dir,
-            "foger-tiktok-photos.zip",
+            "foger-social-photos.zip",
             mimetype="application/zip",
         )
 
