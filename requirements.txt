@@ -1,4 +1,5 @@
-flask
-flask-limiter
+Flask
+Flask-Limiter
 gunicorn
 yt-dlp
+requests
