@@ -29,7 +29,10 @@ def allowed(url):
 
 @app.get("/")
 def index():
-    return send_from_directory("static", "index.html")
+    for d in ("static", "."):
+        if os.path.exists(os.path.join(app.root_path, d, "index.html")):
+            return send_from_directory(os.path.join(app.root_path, d), "index.html")
+    abort(404)
 
 
 @app.post("/api/info")
