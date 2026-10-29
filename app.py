@@ -33,6 +33,8 @@ MAX_BYTES = MAX_MB * 1024 * 1024
 IMAGE_MAX_MB = int(os.getenv("IMAGE_MAX_MB", "20"))
 IMAGE_MAX_BYTES = IMAGE_MAX_MB * 1024 * 1024
 
+SITE_URL = "https://foger-downloader.onrender.com"
+
 ALLOWED_DOMAINS = (
     "youtube.com", "youtu.be", "tiktok.com", "facebook.com",
     "fb.watch", "instagram.com", "twitter.com", "x.com",
@@ -151,15 +153,55 @@ def looks_like_image_url(url):
         return False
 
 
+# --------------------------------------------------
+# WEBSITE AND SEO ROUTES
+# --------------------------------------------------
+
 @app.get("/")
 def index():
     return send_from_directory(app.root_path, "index.html")
+
+
+@app.get("/robots.txt")
+def robots_txt():
+    content = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        f"Sitemap: {SITE_URL}/sitemap.xml\n"
+    )
+
+    return content, 200, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "public, max-age=3600",
+    }
+
+
+@app.get("/sitemap.xml")
+def sitemap_xml():
+    # The homepage is currently the main public page.
+    # Add other public pages here if they are created later.
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>{SITE_URL}/</loc>
+  </url>
+</urlset>
+"""
+
+    return xml, 200, {
+        "Content-Type": "application/xml; charset=utf-8",
+        "Cache-Control": "public, max-age=3600",
+    }
 
 
 @app.get("/api/health")
 def health():
     return jsonify(status="ok", app="FOGER DOWNLOADER")
 
+
+# --------------------------------------------------
+# VIDEO INFORMATION
+# --------------------------------------------------
 
 @app.post("/api/info")
 @limiter.limit("20 per minute")
@@ -224,6 +266,10 @@ def info():
             )
         ), 422
 
+
+# --------------------------------------------------
+# VIDEO DOWNLOAD
+# --------------------------------------------------
 
 @app.get("/api/download")
 @limiter.limit("6 per minute")
@@ -312,6 +358,10 @@ def download_video():
             )
         ), 422
 
+
+# --------------------------------------------------
+# DIRECT IMAGE DOWNLOAD
+# --------------------------------------------------
 
 def download_direct_image(url, temp_dir):
     """Download a direct image while validating redirects and file size."""
@@ -474,6 +524,10 @@ def collect_image_candidates(media, candidates=None, depth=0):
     return candidates
 
 
+# --------------------------------------------------
+# TIKTOK PHOTO DOWNLOAD
+# --------------------------------------------------
+
 def download_tiktok_photos(url, temp_dir):
     """Use gallery-dl to download photos from a TikTok photo post."""
     command = [
@@ -545,6 +599,10 @@ def send_temp_file(path, temp_dir, download_name, mimetype=None):
     )
     return response
 
+
+# --------------------------------------------------
+# IMAGE AND SOCIAL PHOTO DOWNLOAD
+# --------------------------------------------------
 
 @app.post("/api/image-download")
 @limiter.limit("10 per minute")
@@ -697,6 +755,10 @@ def download_image():
 
         return jsonify(error=str(error)), 422
 
+
+# --------------------------------------------------
+# START FLASK
+# --------------------------------------------------
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "5000"))
