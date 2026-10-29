@@ -4,14 +4,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google-site-verification" content="HuY_tI7PjFQAEx_mH1mjaNuUlOW9RpK4GYVwtTPaDYg">
 <meta name="theme-color" content="#080e1c">
+<meta name="description" content="FOGER Downloader helps you download videos and photos from supported public links.">
 <title>FOGER DOWNLOADER — Video & Photo Downloader</title>
+
 <style>
 :root{--bg:#070d1b;--panel:#0b1325;--line:#233453;--muted:#a9b7d0;--white:#f7f9ff;--purple:#792cff;--blue:#079cff}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;background:radial-gradient(ellipse at 50% 35%,#101a35 0,#080e1c 55%,#060b16 100%);color:var(--white);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
-header{min-height:84px;border-bottom:1px solid #1d2a43;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,6vw,100px);gap:22px}
+header{min-height:84px;border-bottom:1px solid #1d2a43;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,6vw,100px);gap:22px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:14px;font-weight:850;font-size:clamp(18px,2.5vw,30px);letter-spacing:-.7px;white-space:nowrap}
 .brand-mark{width:54px;height:48px;border:5px solid #7746ff;border-radius:14px;display:grid;place-items:center;color:#16a3ff;font-size:31px;line-height:1;box-shadow:0 0 24px #5d2bff44}
 .brand span{background:linear-gradient(90deg,#a65aff,#098dff);background-clip:text;color:transparent}
@@ -72,7 +75,7 @@ body.light .feature small{color:#596783}
 .opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .dl{background:linear-gradient(100deg,#7725f4,#087fff);color:#fff;text-decoration:none;padding:8px 16px;border-radius:20px;font-size:14px;font-weight:700}
 @media(max-width:950px){header{padding:0 22px}.brand{font-size:20px}.brand-mark{width:43px;height:41px;font-size:26px;border-width:4px}nav{gap:18px}.platform-grid{grid-template-columns:repeat(4,1fr);row-gap:25px}.features{grid-template-columns:repeat(2,1fr);margin-left:0;margin-right:0}}
-@media(max-width:650px){header{padding:13px 16px;gap:10px}.brand{font-size:18px;gap:9px}.brand-mark{width:38px;height:36px;font-size:23px}.header-right{margin-left:auto}.pill{padding:9px 12px;font-size:12px}nav{order:3;width:100%;justify-content:center;gap:30px}nav a{font-size:14px}main{padding:34px 14px 25px}.hero h1{letter-spacing:-1px}.eyebrow{font-size:13px;padding:8px 15px}.subtitle{font-size:16px}.urlbar{min-height:62px;padding:8px 8px 8px 17px;gap:9px}.urlbar input{font-size:14px}.paste-btn{padding:11px 13px;font-size:13px}.linkicon{font-size:20px}.auto-detect{font-size:12px;margin:15px 0}.download-btn{font-size:17px;padding:16px}.platforms{padding:22px 12px;border-radius:18px}.platforms h2{font-size:22px}.platforms p{font-size:13px}.platform-grid{grid-template-columns:repeat(4,1fr);gap:22px 6px}.platform-icon{width:47px;height:47px;font-size:23px}.platform{font-size:12px}.features{gap:24px 12px;margin-top:32px}.feature{gap:10px;align-items:flex-start}.feature-icon{width:42px;height:42px;font-size:20px}.feature strong{font-size:13px}.feature small{font-size:11px}.footer-links{flex-wrap:wrap}.card img{width:88px;height:64px}}
+@media(max-width:650px){header{padding:13px 16px;gap:10px}.brand{font-size:18px;gap:9px}.brand-mark{width:38px;height:36px;font-size:23px}.header-right{margin-left:auto}nav{order:3;width:100%;justify-content:center;gap:30px}nav a{font-size:14px}.pill{padding:9px 12px;font-size:12px}main{padding:34px 14px 25px}.hero h1{letter-spacing:-1px}.eyebrow{font-size:13px;padding:8px 15px}.subtitle{font-size:16px}.urlbar{min-height:62px;padding:8px 8px 8px 17px;gap:9px}.urlbar input{font-size:14px}.paste-btn{padding:11px 13px;font-size:13px}.linkicon{font-size:20px}.auto-detect{font-size:12px;margin:15px 0}.download-btn{font-size:17px;padding:16px}.platforms{padding:22px 12px;border-radius:18px}.platforms h2{font-size:22px}.platforms p{font-size:13px}.platform-grid{grid-template-columns:repeat(4,1fr);gap:22px 6px}.platform-icon{width:47px;height:47px;font-size:23px}.platform{font-size:12px}.features{gap:24px 12px;margin-top:32px}.feature{gap:10px;align-items:flex-start}.feature-icon{width:42px;height:42px;font-size:20px}.feature strong{font-size:13px}.feature small{font-size:11px}.footer-links{flex-wrap:wrap}.card img{width:88px;height:64px}}
 </style>
 </head>
 <body>
@@ -96,7 +99,6 @@ body.light .feature small{color:#596783}
     <div class="eyebrow">Fast <b>•</b> Free <b>•</b> Easy to use</div>
     <h1>FOGER <span class="gradient">DOWNLOADER</span></h1>
     <p class="subtitle">Download your favorite videos and photos from<br class="desktop"> YouTube, TikTok, Facebook, Instagram and more — easily.</p>
-
     <div class="downloader">
       <form id="downloadForm">
         <div class="urlbar">
@@ -107,7 +109,6 @@ body.light .feature small{color:#596783}
         <p class="auto-detect">✨ Media type is detected automatically from supported direct links.</p>
         <button class="download-btn" id="downloadBtn" type="submit"><span>⇩</span> Download</button>
       </form>
-
       <div class="status" id="status" role="status" aria-live="polite"></div>
       <div id="result"></div>
     </div>
@@ -183,7 +184,7 @@ document.getElementById('pasteBtn').addEventListener('click', async () => {
     }
   } catch {
     input.focus();
-    showStatus('Clipboard access was blocked. Paste the link into the field manually (Ctrl+V or long-press → Paste).', 'error');
+    showStatus('Clipboard access was blocked. Paste the link manually (Ctrl+V or long-press → Paste).', 'error');
   }
 });
 
@@ -217,20 +218,11 @@ function isVideoUrl(url) {
   return ['mp4','webm','mov','m4v','ogv'].includes(getMediaExtension(url));
 }
 
-function safeFileName(name) {
-  return String(name || 'foger-download').replace(/[\\/:*?"<>|]/g, '-').slice(0, 100);
-}
-
-/*
- * Downloads a response from our own Flask image endpoint.
- * For social posts the current backend may return only a thumbnail.
- * Full TikTok carousel ZIP support requires additional backend extraction.
- */
 async function requestImageDownload(url, source = 'social') {
   const response = await fetch('/api/image-download', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url, source })
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({url, source})
   });
 
   const type = (response.headers.get('content-type') || '').toLowerCase();
@@ -245,10 +237,7 @@ async function requestImageDownload(url, source = 'social') {
   }
 
   const blob = await response.blob();
-
-  if (!blob.size) {
-    throw new Error('The server returned an empty file.');
-  }
+  if (!blob.size) throw new Error('The server returned an empty file.');
 
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -261,28 +250,24 @@ async function requestImageDownload(url, source = 'social') {
   setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
 }
 
-/* Direct public image URL */
 async function downloadDirectImage(url) {
   showStatus('Downloading image...');
   await requestImageDownload(url, 'direct');
   showStatus('Image download started.', 'good');
 }
 
-/* Social post image: best effort with the current backend */
 async function downloadSocialImage(url) {
   showStatus('Trying to retrieve the public photo...');
   await requestImageDownload(url, 'social');
-  showStatus('Image download started. If this is a carousel, the current server may only return one preview image.', 'good');
+  showStatus('Image download started. A carousel may return only one preview image.', 'good');
 }
 
-/* Video info and quality selection */
 async function loadVideoInfo(url) {
   showStatus('Checking video link...');
-
   const response = await fetch('/api/info', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url })
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({url})
   });
 
   let data;
@@ -297,8 +282,8 @@ async function loadVideoInfo(url) {
   }
 
   statusBox.className = 'status';
-
   const base = '/api/download?url=' + encodeURIComponent(url) + '&q=';
+
   const button = (quality, label) =>
     `<a class="dl" href="${base}${encodeURIComponent(quality)}">${label}</a>`;
 
@@ -330,7 +315,6 @@ function escapeHTML(value) {
   }[char]));
 }
 
-/* Main Download button */
 document.getElementById('downloadForm').addEventListener('submit', async event => {
   event.preventDefault();
   result.innerHTML = '';
@@ -348,17 +332,14 @@ document.getElementById('downloadForm').addEventListener('submit', async event =
 
   const url = parsed.href;
   const extension = getMediaExtension(url);
-
   setLoading(true);
 
   try {
-    /* Direct image links use the image endpoint. */
     if (isImageUrl(url)) {
       await downloadDirectImage(url);
       return;
     }
 
-    /* Direct video links use the existing video endpoint. */
     if (isVideoUrl(url)) {
       showStatus('Preparing your video...');
       const link = document.createElement('a');
@@ -371,25 +352,14 @@ document.getElementById('downloadForm').addEventListener('submit', async event =
       return;
     }
 
-    /*
-     * For TikTok photo posts, try the image endpoint first.
-     * This is separate from the existing video-download route.
-     */
     if (isTikTokUrl(url) && /\/photo\//i.test(parsed.pathname)) {
       await downloadSocialImage(url);
       return;
     }
 
-    /*
-     * Try the normal media info route first for supported social links.
-     */
     try {
       await loadVideoInfo(url);
     } catch (infoError) {
-      /*
-       * TikTok short links may redirect to a /photo/ URL.
-       * If info extraction fails, try the social image endpoint.
-       */
       if (isTikTokUrl(url)) {
         showStatus('Video info could not be read. Trying the TikTok photo endpoint...');
         try {
@@ -398,13 +368,12 @@ document.getElementById('downloadForm').addEventListener('submit', async event =
         } catch (imageError) {
           showStatus(
             'TikTok download failed: ' + imageError.message +
-            ' If this is a photo carousel, the server may need additional TikTok extraction support.',
+            ' The server may need additional TikTok extraction support.',
             'error'
           );
           return;
         }
       }
-
       throw infoError;
     }
   } catch (error) {
