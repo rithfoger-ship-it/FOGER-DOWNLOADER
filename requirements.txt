@@ -1,7 +1,6 @@
-
 Flask
 Flask-Limiter
 gunicorn
-yt-dlp
+yt-dlp[default]
 requests
 gallery-dl

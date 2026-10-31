@@ -27,8 +27,7 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
-MAX_SECONDS = int(os.getenv("MAX_SECONDS", "1800"))
-MAX_MB = int(os.getenv("MAX_MB", "500"))
+MAX_MB = int(os.getenv("MAX_MB", "2048"))
 MAX_BYTES = MAX_MB * 1024 * 1024
 IMAGE_MAX_MB = int(os.getenv("IMAGE_MAX_MB", "20"))
 IMAGE_MAX_BYTES = IMAGE_MAX_MB * 1024 * 1024
@@ -57,8 +56,12 @@ BASE_OPTIONS = {
     "quiet": True,
     "no_warnings": True,
     "noplaylist": True,
-    "socket_timeout": 25,
-    "retries": 2,
+    "socket_timeout": 40,
+    "retries": 5,
+    "extractor_retries": 5,
+    "fragment_retries": 10,
+    "file_access_retries": 3,
+    "concurrent_fragment_downloads": 4,
 }
 
 
@@ -230,13 +233,6 @@ def info():
         if not media:
             return jsonify(error="Could not read this link."), 422
 
-        duration = media.get("duration") or 0
-
-        if duration > MAX_SECONDS:
-            return jsonify(
-                error="This video is longer than the allowed duration."
-            ), 413
-
         heights = sorted({
             int(item["height"])
             for item in (media.get("formats") or [])
@@ -252,7 +248,7 @@ def info():
         return jsonify(
             title=media.get("title") or "Media",
             thumbnail=media.get("thumbnail"),
-            duration=duration,
+            duration=media.get("duration") or 0,
             heights=heights,
             type="video" if heights else "unknown",
         )
@@ -293,6 +289,7 @@ def download_video():
             ),
             "max_filesize": MAX_BYTES,
             "noplaylist": True,
+            "continuedl": True,
             "overwrites": True,
         })
 
@@ -307,11 +304,13 @@ def download_video():
             })
         elif quality == "best":
             options["format"] = "bestvideo*+bestaudio/best"
+            options["merge_output_format"] = "mp4/mkv"
         else:
             options["format"] = (
                 f"bestvideo*[height<={quality}]"
                 f"+bestaudio/best[height<={quality}]/best"
             )
+            options["merge_output_format"] = "mp4/mkv"
 
         with yt_dlp.YoutubeDL(options) as downloader:
             media = downloader.extract_info(url, download=True)
