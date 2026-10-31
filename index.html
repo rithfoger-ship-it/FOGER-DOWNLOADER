@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -220,7 +221,7 @@ function isTikTokUrl(url) {
 }
 
 function isImageUrl(url) {
-  return ['jpg','jpeg','png','gif','webp'].includes(getMediaExtension(url));
+  return ['jpg','jpeg','png','gif','webp','avif'].includes(getMediaExtension(url));
 }
 
 function isVideoUrl(url) {
@@ -273,6 +274,7 @@ async function downloadSocialImage(url) {
 
 async function loadVideoInfo(url) {
   showStatus('Checking video link...');
+
   const response = await fetch('/api/info', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -280,6 +282,7 @@ async function loadVideoInfo(url) {
   });
 
   let data;
+
   try {
     data = await response.json();
   } catch {
@@ -291,6 +294,7 @@ async function loadVideoInfo(url) {
   }
 
   statusBox.className = 'status';
+
   const base = '/api/download?url=' + encodeURIComponent(url) + '&q=';
 
   const button = (quality, label) =>
@@ -299,7 +303,7 @@ async function loadVideoInfo(url) {
   result.innerHTML = `
     <div class="card">
       ${data.thumbnail
-        ? `<img src="${String(data.thumbnail).replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" referrerpolicy="no-referrer" alt="">`
+        ? `<img src="${escapeHTML(data.thumbnail)}" referrerpolicy="no-referrer" alt="">`
         : ''}
       <div>
         <b>${escapeHTML(data.title || 'Media')}</b>
@@ -340,7 +344,7 @@ document.getElementById('downloadForm').addEventListener('submit', async event =
   }
 
   const url = parsed.href;
-  const extension = getMediaExtension(url);
+
   setLoading(true);
 
   try {
@@ -351,17 +355,20 @@ document.getElementById('downloadForm').addEventListener('submit', async event =
 
     if (isVideoUrl(url)) {
       showStatus('Preparing your video...');
+
       const link = document.createElement('a');
       link.href = '/api/download?url=' + encodeURIComponent(url) + '&q=best';
       link.download = 'foger-video';
+
       document.body.appendChild(link);
       link.click();
       link.remove();
+
       showStatus('Video download requested.', 'good');
       return;
     }
 
-    if (isTikTokUrl(url) && /\/photo\//i.test(parsed.pathname)) {
+    if (isTikTokUrl(url) && /\/photo\//i.test(new URL(url).pathname)) {
       await downloadSocialImage(url);
       return;
     }
@@ -371,6 +378,7 @@ document.getElementById('downloadForm').addEventListener('submit', async event =
     } catch (infoError) {
       if (isTikTokUrl(url)) {
         showStatus('Video info could not be read. Trying the TikTok photo endpoint...');
+
         try {
           await downloadSocialImage(url);
           return;
@@ -383,10 +391,13 @@ document.getElementById('downloadForm').addEventListener('submit', async event =
           return;
         }
       }
+
       throw infoError;
     }
+
   } catch (error) {
     showStatus(error.message || 'Something went wrong. Please try again.', 'error');
+
   } finally {
     setLoading(false);
   }
@@ -394,6 +405,7 @@ document.getElementById('downloadForm').addEventListener('submit', async event =
 
 document.getElementById('themeBtn').addEventListener('click', () => {
   document.body.classList.toggle('light');
+
   document.getElementById('themeBtn').textContent =
     document.body.classList.contains('light') ? '☀' : '☾';
 });
